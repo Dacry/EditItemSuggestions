@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>EditItemSuggestions</title>
+		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+
+		<style type="text/css">
+			.searchcontainer {
+				margin-top: 30px;
+			}
+			.tt-dropdown-menu {
+				overflow: contain;
+				padding-top: 0px;
+				padding-bottom: 0px;
+			}
+
+			.tt-suggestion {
+				border-bottom: 1px solid #000;
+				margin: -5px -15px 5px -15px;
+				padding: 5px 15px 5px 15px;
+			}
+			.tt-suggestion:last-child {
+				border-bottom: 0px;
+				margin-bottom: 0px;
+			}
+			.tt-suggestion:hover {
+				background: #008;
+				color: #fff;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-8 col-sm-offset-2 well searchcontainer">
+					<div class="input-group">
+						<input type="text" class="form-control col-sm-12" placeholder="property" id="searchbox">
+						<span class="input-group-btn">
+							<button class="btn btn-default" type="button"><i class="glyphicon glyphicon-search"></i></button>
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-sm-8 col-sm-offset-2 well resultcontainer">
+					<p>Please enter any property in the above box!</p>
+				</div>
+			</div>
+		</div>
+
+		<script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
+		<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script type="text/javascript" src="bower_components/typeahead.js/dist/bloodhound.min.js"></script>
+		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.bundle.min.js"></script>
+		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.jquery.min.js"></script>
+		<script>
+
+			var properties = new Bloodhound({
+				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+				queryTokenizer: Bloodhound.tokenizers.whitespace,
+				remote: '/api/properties?q=%QUERY',
+				limit: 7
+			});
+
+			properties.initialize();
+
+			$('#searchbox').typeahead(null, {
+				name: 'properties',
+				displayKey: function(properties) {
+					return properties['label'];
+				},
+				templates: {
+					suggestion: function(properties) {
+						var ret = '<b>' + properties['label'] + '</b>';
+						if (properties.hasOwnProperty('description')) {
+							ret += '<br />' + properties['description'];
+						}
+						if (properties.hasOwnProperty('alias')) {
+							ret += '<br /><i>Also known as: ' + properties['alias'] + '</i>';
+						}
+						return ret;
+					}
+				},
+				source: properties.ttAdapter(),
+				select: function() {
+					alert('selected');
+				}
+			}).bind("typeahead:selected", function(evt, prop) {
+				$('.resultcontainer').text('Please wait while the data is being loaded...');
+				$.ajax('/api/itemSuggestions?id=' + prop['id']).done(function(data) {
+					$('.resultcontainer').text('');
+					$.each(data, function(k, v) {
+						var ret = '<p><a href="http://wikidata.org/wiki/Q' + v.id + '" target="_blank"><strong>' + v.label + '</strong></a>';
+						if (v.hasOwnProperty('description')) {
+							ret += '<br />' + v.description;
+						}
+						ret += '</p>';
+
+						$('.resultcontainer').html($('.resultcontainer').html() + ret);
+					});
+				});
+			});
+		</script>
+	</body>
+</html>
