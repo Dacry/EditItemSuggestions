@@ -65,6 +65,7 @@ class PropertyController extends BaseController {
     foreach ($sugs as $sug) {
       $ids[] = $sug->item_id;
     }
+    if (empty($ids)) return array();
     //return print_r($ids, true);
     $items = DB::table('wb_terms')
       ->select(DB::raw('term_entity_id, term_type, term_text'))
