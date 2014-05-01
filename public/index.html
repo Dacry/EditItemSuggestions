@@ -63,7 +63,7 @@
 			var properties = new Bloodhound({
 				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
 				queryTokenizer: Bloodhound.tokenizers.whitespace,
-				remote: '/api/properties?q=%QUERY',
+				remote: './api/properties?q=%QUERY',
 				limit: 7
 			});
 
@@ -92,7 +92,7 @@
 				}
 			}).bind("typeahead:selected", function(evt, prop) {
 				$('.resultcontainer').text('Please wait while the data is being loaded...');
-				$.ajax('/api/itemSuggestions?id=' + prop['id']).done(function(data) {
+				$.ajax('./api/itemSuggestions?id=' + prop['id']).done(function(data) {
 					$('.resultcontainer').text('');
 					$.each(data, function(k, v) {
 						var ret = '<p><a href="http://wikidata.org/wiki/Q' + v.id + '" target="_blank"><strong>' + v.label + '</strong></a>';
