@@ -29,12 +29,45 @@
 				color: #fff;
 				cursor: pointer;
 			}
+
+			.resultcontainer p.result {
+				margin: 0;
+				padding: 5px 5px 5px 5px;
+				border-bottom: 1px solid #aaa;
+			}
+			.resultcontainer p.result:nth-child(even) {
+				background: #f9f9f9;
+			}
+			.resultcontainer p.result:nth-child(odd) {
+				background: #fff;
+			}
+			.resultcontainer p.result:last-child {
+				border-bottom: 0px solid;
+			}
+			.resultcontainer p.result:hover {
+				background: #f5f5f5;
+			}
+
+			/*	border-bottom: 1px solid #f00;
+			}
+			.resultcontainer p:nth-child(even) {
+				background: #f0f;
+				text-shadow: 50px 0px 2px #0ff;
+			}
+			.resultcontainer p:nth-child(odd) {
+				background: #0f0;
+				text-shadow: 50px 0px 2px #f00;
+			}*/
 		</style>
 	</head>
 	<body>
 		<div class="container-fluid">
 			<div class="row">
 				<div class="col-sm-8 col-sm-offset-2 well searchcontainer">
+					<article>					
+						<h2>EditItemSuggestions v.0.0.1</h2>
+						<p>Enter property in order to get items which are most likely missing it.</p>
+					</article>
 					<div class="input-group">
 						<input type="text" class="form-control col-sm-12" placeholder="property" id="searchbox">
 						<span class="input-group-btn">
@@ -60,50 +93,71 @@
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.jquery.min.js"></script>
 		<script>
 
-			var properties = new Bloodhound({
-				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-				queryTokenizer: Bloodhound.tokenizers.whitespace,
-				remote: './api/properties?q=%QUERY',
-				limit: 7
-			});
-
-			properties.initialize();
-
-			$('#searchbox').typeahead(null, {
-				name: 'properties',
-				displayKey: function(properties) {
-					return properties['label'];
-				},
-				templates: {
-					suggestion: function(properties) {
-						var ret = '<b>' + properties['label'] + '</b>';
-						if (properties.hasOwnProperty('description')) {
-							ret += '<br />' + properties['description'];
-						}
-						if (properties.hasOwnProperty('alias')) {
-							ret += '<br /><i>Also known as: ' + properties['alias'] + '</i>';
-						}
-						return ret;
-					}
-				},
-				source: properties.ttAdapter(),
-				select: function() {
-					alert('selected');
-				}
-			}).bind("typeahead:selected", function(evt, prop) {
-				$('.resultcontainer').text('Please wait while the data is being loaded...');
-				$.ajax('./api/itemSuggestions?id=' + prop['id']).done(function(data) {
-					$('.resultcontainer').text('');
-					$.each(data, function(k, v) {
-						var ret = '<p><a href="http://wikidata.org/wiki/Q' + v.id + '" target="_blank"><strong>' + v.label + '</strong></a>';
-						if (v.hasOwnProperty('description')) {
-							ret += '<br />' + v.description;
-						}
-						ret += '</p>';
-
-						$('.resultcontainer').html($('.resultcontainer').html() + ret);
-					});
+			$(document).ready(function() {
+				var properties = new Bloodhound({
+					datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
+					queryTokenizer: Bloodhound.tokenizers.whitespace,
+					remote: './api/properties?q=%QUERY',
+					limit: 7
 				});
+				var query = {};
+
+				properties.initialize();
+
+				$('#searchbox').typeahead(null, {
+					name: 'properties',
+					displayKey: function(properties) {
+						return properties['label'];
+					},
+					templates: {
+						suggestion: function(properties) {
+							var ret = '<b>' + properties['label'] + '</b>';
+							if (properties.hasOwnProperty('description')) {
+								ret += '<br />' + properties['description'];
+							}
+							if (properties.hasOwnProperty('alias')) {
+								ret += '<br /><i>Also known as: ' + properties['alias'] + '</i>';
+							}
+							return ret;
+						}
+					},
+					source: properties.ttAdapter(),
+					select: function() {
+						alert('selected');
+					}
+				}).bind("typeahead:selected", function(evt, prop) {
+					getResults(prop['id']);
+				});
+
+				var getResults = function(propertyId) {
+					$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
+					$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
+						$('.resultcontainer').text('');
+						var ret = '';
+						$.each(data, function(k, v) {
+							ret += '<p class="result"><a href="http://wikidata.org/wiki/Q' + v.id + '" target="_blank" data-item="' + v.id + '" data-property="' + propertyId + '"><strong>' + v.label + '</strong></a>';
+							if (v.hasOwnProperty('description')) {
+								ret += '<br />' + v.description;
+							}
+							ret += '</p>';
+						});
+						$('.resultcontainer').html(ret);
+						$('.resultcontainer a').click(function() {
+							$.ajax('./api/addWatchTask?item=' + $(this).data('item') + '&property=' + $(this).data('property')).done(function(data) {
+								console.log(data);
+							});
+						});
+					});
+				};
+
+				
+				location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
+				if (query.hasOwnProperty('id')) {
+					$.ajax('./api/propertyLabel?id=' + query.id).done(function(data) {
+						$('#searchbox').val(data[0].term_text);
+					});
+					getResults(query.id);
+				}
 			});
 		</script>
 	</body>
