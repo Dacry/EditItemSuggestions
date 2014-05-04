@@ -13,11 +13,12 @@ class WbsTasks extends Migration {
 	public function up()
 	{
 		Schema::create('wbs_tasks', function($t) {
+			$t->increments('id')->unsigned();
 			$t->integer('item_id')->unsigned();
 			$t->integer('property_id')->unsigned();
 			$t->timestamps();
 			$t->softDeletes();
-			$t->primary(array('item_id', 'property_id'));
+			$t->unique(array('item_id', 'property_id'));
 		});
 	}
 
