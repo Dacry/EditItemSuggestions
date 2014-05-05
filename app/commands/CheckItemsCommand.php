@@ -30,6 +30,7 @@ class CheckItemsCommand extends Command {
 	public function __construct()
 	{
 		parent::__construct();
+		Log::useFiles(storage_path().'/logs/itemsuggestion.log');
 	}
 
 	/**
@@ -39,27 +40,41 @@ class CheckItemsCommand extends Command {
 	 */
 	public function fire()
 	{
+
+		Log::info('running cron job checkitems');
+
 		// find tasks of the last 10 minutes
-		$tasks = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->get();
+		//$tasks = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->get();
+		Log::info('fetching all tasks');
+		$tasks = WbsTask::all();
 
 		// pinpoint-query wikidata api
+		Log::info('initializing cURL for querying');
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); 
 		foreach ($tasks as $t) {
 			curl_setopt($ch, CURLOPT_URL, "https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=Q".$t->item_id."&property=P".$t->property_id); 
             $data = curl_exec($ch);
             $data = json_decode($data, true);
-            $this->info(count($data['claims']));
-
+            
             // check if the property was entered
 			if (count($data['claims']) > 0) {
+				// User edited an item successfully
+				Log::info('property was entered', array('item_id' => $t->item_id, 'property_id' => $t->property_id));
 				ItemSuggestion::where('property_id', $t->property_id)->where('item_id', $t->item_id)->delete();
+				Log::info('suggestion was deleted');
+				$t->forceDelete();
+				Log::info('task was deleted');
 			}
-
-			// delete the item-property-combination in any case
-			$t->forceDelete();
 		}
+		Log::info('close cURL');
         curl_close($ch);
+
+        Log::info('delete all tasks older than ten minutes');
+        $deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->delete();
+        Log::info('deleted ' . $deletedRows . ' tasks');
+
+        Log::info('finished cron job checkitems');
 
 	}
 
