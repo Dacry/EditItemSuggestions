@@ -2,12 +2,15 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
-		<title>EditItemSuggestions</title>
+		<title>Edit Item Suggestions</title>
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
 
 		<style type="text/css">
 			.searchcontainer {
 				margin-top: 30px;
+			}
+			.history {
+				margin-right: 5px;
 			}
 			.tt-dropdown-menu {
 				overflow: contain;
@@ -47,17 +50,6 @@
 			.resultcontainer p.result:hover {
 				background: #f5f5f5;
 			}
-
-			/*	border-bottom: 1px solid #f00;
-			}
-			.resultcontainer p:nth-child(even) {
-				background: #f0f;
-				text-shadow: 50px 0px 2px #0ff;
-			}
-			.resultcontainer p:nth-child(odd) {
-				background: #0f0;
-				text-shadow: 50px 0px 2px #f00;
-			}*/
 		</style>
 	</head>
 	<body>
@@ -65,13 +57,17 @@
 			<div class="row">
 				<div class="col-sm-8 col-sm-offset-2 well searchcontainer">
 					<article>					
-						<h2>EditItemSuggestions</h2>
+						<h2>Edit Item Suggestions</h2>
 						<p>Enter property in order to get items which are most likely missing it.</p>
 					</article>
+					<div id="history" class="pull-left history">
+						<button id="prevProperty" class="btn btn-primary"><i class="glyphicon glyphicon-arrow-left"></i></button>
+						<button id="nextProperty" class="btn btn-primary"><i class="glyphicon glyphicon-arrow-right"></i></button>
+					</div>
 					<div class="input-group">
 						<input type="text" class="form-control col-sm-12" placeholder="property" id="searchbox">
 						<span class="input-group-btn">
-							<button class="btn btn-default" type="button"><i class="glyphicon glyphicon-search"></i></button>
+							<button id="refresh" class="btn btn-default" type="button"><i class="glyphicon glyphicon-refresh"></i></button>
 						</span>
 					</div>
 				</div>
@@ -102,6 +98,44 @@
 				});
 				var query = {};
 
+				var history = {'current': -1, 'queries': []};
+
+				var checkHistoryButtons = function() {
+					if (history.current <= 0) {
+						$('#prevProperty').attr('disabled', 'disabled');
+					} else {
+						$('#prevProperty').removeAttr('disabled');
+					}
+					if (history.current >= history.queries.length-1 || history.current === -1) {
+						$('#nextProperty').attr('disabled', 'disabled');
+					} else {
+						$('#nextProperty').removeAttr('disabled');
+					}
+				};
+				var setQuery = function(id) {
+					if (id >= 0 && id < history.queries.length) {
+						$('#searchbox').val(history.queries[id].searchterm);
+						$('.resultcontainer').html(history.queries[id].results);
+						history.current = id;
+					}
+					query.id = history.queries[id].id;
+					checkHistoryButtons();
+				};
+				var setPrevQuery = function() {
+					setQuery(history.current - 1);
+				};
+				var setNextQuery = function() {
+					setQuery(history.current + 1);
+				};
+				checkHistoryButtons();
+
+				$('#prevProperty').click(function() {
+					setPrevQuery();
+				});
+				$('#nextProperty').click(function() {
+					setNextQuery();
+				});
+
 				properties.initialize();
 
 				$('#searchbox').typeahead(null, {
@@ -122,14 +156,12 @@
 						}
 					},
 					source: properties.ttAdapter(),
-					select: function() {
-						alert('selected');
-					}
 				}).bind("typeahead:selected", function(evt, prop) {
-					getResults(prop['id']);
+					getResults(prop['id'], true);
 				});
 
-				var getResults = function(propertyId) {
+				var getResults = function(propertyId, addToHistory) {
+
 					$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
 					$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
 						$('.resultcontainer').text('');
@@ -142,22 +174,33 @@
 							ret += '</p>';
 						});
 						$('.resultcontainer').html(ret);
+						if (addToHistory) {
+							history.queries.push({'searchterm': $('#searchbox').val(), 'results': $('.resultcontainer').html(), 'id': propertyId});
+							history.current = history.queries.length - 1;
+							setQuery(history.current);
+							checkHistoryButtons();
+						}
 						$('.resultcontainer a').click(function() {
 							$.ajax('./api/addWatchTask?item=' + $(this).data('item') + '&property=' + $(this).data('property')).done(function(data) {
-								console.log(data);
 							});
 						});
 					});
 				};
-
+				$('#refresh').click(function() {
+					console.log('query', query);
+					loadPage();
+				});
 				
 				location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
-				if (query.hasOwnProperty('id')) {
-					$.ajax('./api/propertyLabel?id=' + query.id).done(function(data) {
-						$('#searchbox').val(data[0].term_text);
-					});
-					getResults(query.id);
-				}
+				var loadPage = function() {
+					if (query.hasOwnProperty('id')) {
+						$.ajax('./api/propertyLabel?id=' + query.id).done(function(data) {
+							$('#searchbox').val(data[0].term_text);
+						});
+						getResults(query.id, false);
+					}
+				};
+				loadPage();
 			});
 		</script>
 	</body>
