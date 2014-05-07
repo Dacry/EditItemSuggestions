@@ -45,19 +45,17 @@ class CheckItemsCommand extends Command {
 
 		// find tasks of the last 10 minutes
 		//$tasks = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->get();
-		Log::info('fetching all tasks');
 		$tasks = WbsTask::all();
 
 		// pinpoint-query wikidata api
-		Log::info('initializing cURL for querying');
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); 
 		foreach ($tasks as $t) {
 			curl_setopt($ch, CURLOPT_URL, "https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=Q".$t->item_id."&property=P".$t->property_id); 
-            $data = curl_exec($ch);
-            $data = json_decode($data, true);
-            
-            // check if the property was entered
+			$data = curl_exec($ch);
+			$data = json_decode($data, true);
+
+			// check if the property was entered
 			if (count($data['claims']) > 0) {
 				// User edited an item successfully
 				Log::info('property was entered', array('item_id' => $t->item_id, 'property_id' => $t->property_id));
@@ -67,14 +65,12 @@ class CheckItemsCommand extends Command {
 				Log::info('task was deleted');
 			}
 		}
-		Log::info('close cURL');
-        curl_close($ch);
+		curl_close($ch);
 
-        Log::info('delete all tasks older than ten minutes');
-        $deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->delete();
-        Log::info('deleted ' . $deletedRows . ' tasks');
+		$deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->delete();
+		Log::info('deleted ' . $deletedRows . ' tasks that were older than 10 minutes');
 
-        Log::info('finished cron job checkitems');
+		Log::info('finished cron job checkitems');
 
 	}
 
