@@ -1,4 +1,6 @@
-Once 
+Once for Setup:
+
+
 
 sql>
 
@@ -15,7 +17,9 @@ CREATE TABLE `wb_terms` (
 	`term_text` VARBINARY(255) NOT NULL,
 	`term_search_key` VARBINARY(255) NOT NULL,
 	`term_weight` FLOAT UNSIGNED NOT NULL DEFAULT '0',
-	PRIMARY KEY (`term_row_id`)
+	PRIMARY KEY (`term_row_id`),
+	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`),
+	INDEX `term_entity_type_term_language_term_type` (`term_entity_type`, `term_type`, `term_language`, `term_search_key`)
 )
 COLLATE='binary'
 ENGINE=InnoDB
@@ -25,14 +29,20 @@ CREATE TABLE `wbs_item_suggestions` (
 	`property_id` INT(11) NOT NULL AUTO_INCREMENT,
 	`item_id` INT(11) NOT NULL DEFAULT '0',
 	`probability` DOUBLE NULL DEFAULT NULL,
-	PRIMARY KEY (`property_id`, `item_id`)
+	PRIMARY KEY (`property_id`, `item_id`),
+	INDEX `property_id` (`property_id`)
 )
 COLLATE='latin1_swedish_ci'
 ENGINE=InnoDB
 AUTO_INCREMENT=1083;
 
 
-monthly
+
+
+
+monthly for updates:
+
+
 
 find latest pages-articles.xml.bz2
 find latest wb_terms.sql.gz
@@ -44,20 +54,30 @@ python createEditItemSuggestionCsv.py pages.csv editItemSuggestions.csv
 
 python wbTermsParser.py wb_terms.sql.gz wbTerms.csv
 
+
 sql>
 
 use edit_item_suggestions;
 
+
 TRUNCATE `wbs_item_suggestions`;
+
+ALTER TABLE `wbs_item_suggestions` DROP INDEX `property_id`;
 
 LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestions;
 
+ALTER TABLE `wbs_item_suggestions` ADD INDEX `property_id` (`property_id`);
+
+
 TRUNCATE `wb_terms`;
+
+Alter TABLE `wb_terms` DROP	INDEX `term_entity_id_term_entity_type_term_language`;
+
+Alter TABLE `wb_terms` DROP	INDEX `term_entity_type_term_language_term_type`;
 
 LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms;
 
-
 Alter TABLE `wb_terms` ADD	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`);
+
 Alter TABLE `wb_terms` ADD	INDEX `term_entity_type_term_language_term_type` (`term_entity_type`, `term_type`, `term_language`, `term_search_key`);
 
-ALTER TABLE `wbs_item_suggestions` ADD INDEX `property_id` (`property_id`);
