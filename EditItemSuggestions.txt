@@ -48,7 +48,11 @@ sql>
 
 use edit_item_suggestions;
 
+TRUNCATE `wbs_item_suggestions`;
+
 LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestions;
+
+TRUNCATE `wb_terms`;
 
 LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms;
 
