@@ -64,7 +64,7 @@ TRUNCATE `wbs_item_suggestions`;
 
 ALTER TABLE `wbs_item_suggestions` DROP INDEX `property_id`;
 
-LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestions;
+LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestions FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
 
 ALTER TABLE `wbs_item_suggestions` ADD INDEX `property_id` (`property_id`);
 
@@ -75,7 +75,7 @@ Alter TABLE `wb_terms` DROP	INDEX `term_entity_id_term_entity_type_term_language
 
 Alter TABLE `wb_terms` DROP	INDEX `term_entity_type_term_language_term_type`;
 
-LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms;
+LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
 
 Alter TABLE `wb_terms` ADD	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`);
 
