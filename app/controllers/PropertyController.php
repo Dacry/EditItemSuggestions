@@ -98,7 +98,7 @@ class PropertyController extends BaseController {
           default:
             break;
         }
-        $ret[$item->term_entity_id] = $curItem;
+        $ret[array_search($item->term_entity_id, $ids)] = $curItem;
       //}
     }
     return array_values($ret);

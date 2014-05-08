@@ -75,7 +75,7 @@ Alter TABLE `wb_terms` DROP	INDEX `term_entity_id_term_entity_type_term_language
 
 Alter TABLE `wb_terms` DROP	INDEX `term_entity_type_term_language_term_type`;
 
-LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
+LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY "'" LINES TERMINATED BY '\n';
 
 Alter TABLE `wb_terms` ADD	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`);
 
