@@ -18,8 +18,9 @@ CREATE TABLE `wb_terms` (
 	`term_search_key` VARBINARY(255) NOT NULL,
 	`term_weight` FLOAT UNSIGNED NOT NULL DEFAULT '0',
 	PRIMARY KEY (`term_row_id`),
-	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`),
-	INDEX `term_entity_type_term_language_term_type` (`term_entity_type`, `term_type`, `term_language`, `term_search_key`)
+	INDEX `termEntityId` (`term_entity_id`),
+	INDEX `entityType_language_termType` (`term_entity_type`, `term_language`, `term_type`),
+	INDEX `entityType_language_termType_termSearchKey` (`term_entity_type`, `term_language`, `term_type`, `term_search_key`)
 )
 COLLATE='binary'
 ENGINE=InnoDB
@@ -30,7 +31,8 @@ CREATE TABLE `wbs_item_suggestions` (
 	`item_id` INT(11) NOT NULL DEFAULT '0',
 	`probability` DOUBLE NULL DEFAULT NULL,
 	PRIMARY KEY (`property_id`, `item_id`),
-	INDEX `property_id` (`property_id`)
+	INDEX `property_id` (`property_id`),
+	INDEX `item_id` (`item_id`)
 )
 COLLATE='latin1_swedish_ci'
 ENGINE=InnoDB
@@ -64,20 +66,28 @@ TRUNCATE `wbs_item_suggestions`;
 
 ALTER TABLE `wbs_item_suggestions` DROP INDEX `property_id`;
 
+ALTER TABLE `wbs_item_suggestions` DROP INDEX `item_id`;
+
 LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestions FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n';
 
 ALTER TABLE `wbs_item_suggestions` ADD INDEX `property_id` (`property_id`);
 
+ALTER TABLE `wbs_item_suggestions` ADD INDEX `item_id` (`item_id`);
+
 
 TRUNCATE `wb_terms`;
 
-Alter TABLE `wb_terms` DROP	INDEX `term_entity_id_term_entity_type_term_language`;
+Alter TABLE `wb_terms` DROP	INDEX `termEntityId`;
 
-Alter TABLE `wb_terms` DROP	INDEX `term_entity_type_term_language_term_type`;
+Alter TABLE `wb_terms` DROP	INDEX `entityType_language_termType`;
+
+Alter TABLE `wb_terms` DROP	INDEX `entityType_language_termType_termSearchKey`;
 
 LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY "'" LINES TERMINATED BY '\n';
 
-Alter TABLE `wb_terms` ADD	INDEX `term_entity_id_term_entity_type_term_language` (`term_entity_type`, `term_language`, `term_type`, `term_entity_id`);
+Alter TABLE `wb_terms` ADD	INDEX `termEntityId` (`term_entity_id`);
 
-Alter TABLE `wb_terms` ADD	INDEX `term_entity_type_term_language_term_type` (`term_entity_type`, `term_type`, `term_language`, `term_search_key`);
+Alter TABLE `wb_terms` ADD	INDEX `entityType_language_termType` (`term_entity_type`, `term_language`, `term_type`);
+
+Alter TABLE `wb_terms` ADD	INDEX `entityType_language_termType_termSearchKey` (`term_entity_type`, `term_language`, `term_type`, `term_search_key`);
 

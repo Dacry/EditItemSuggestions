@@ -56,37 +56,42 @@ class PropertyController extends BaseController {
     return array();
   }
 
+  function cmpItems($a, $b) {
+    if ($a['probability'] == $b['probability']) {
+        return 0;
+    }
+    return ($a['probability'] < $b['probability']) ? 1 : -1;
+  }
+
   public function getItemSuggestions() {
     $id = 0;
     if (Input::has('id')) $id = Input::get('id');
-    $sugs = ItemSuggestion::where('property_id', $id)->orderBy('probability', 'desc')->get();
-    $items = array();
-    $ids = array();
-    foreach ($sugs as $sug) {
-      $ids[] = $sug->item_id;
-    }
-    if (empty($ids)) return array();
-    //return print_r($ids, true);
-    $items = DB::table('wb_terms')
-      ->select(DB::raw('term_entity_id, term_type, term_text'))
-      ->where('term_entity_type', 'item')
-      ->where('term_language', 'en')
+
+    $items = DB::table('wb_terms as t1')
+      ->select(DB::raw("t1.term_entity_id as term_entity_id, t1.term_type as term_type, t1.term_text as term_text, t2.probability as probability"))
+      ->join('wbs_item_suggestions as t2', function($join) {
+      $join->on('t1.term_entity_id', '=', 't2.item_id');
+        })
+      ->where('t2.property_id', $id)
+      ->where('t1.term_entity_type', 'item')
+      ->where('t1.term_language', 'en')
       ->where(function($query) {
-        $query->where('term_type', '=', 'label')
-          ->orWhere('term_type', '=', 'description');
+        $query->where('t1.term_type', '=', 'label')
+          ->orWhere('t1.term_type', '=', 'description');
       })
-      ->whereIn('term_entity_id', $ids)
       ->get();
     //$items[] = $item;
+    if (empty($items)) return array();
     
     $ret = array();
-    //return print_r($items, true);
+
     foreach ($items as $item) {
       //foreach($item as $i) {
 
         $curItem = array("id" => $item->term_entity_id);
-        if (isset($ret[$item->term_entity_id])) {
-          $curItem = $ret[$item->term_entity_id];
+        $position = $item->term_entity_id;
+        if (isset($ret[$position])) {
+          $curItem = $ret[$position];
         }
         switch ($item->term_type) {
           case "description":
@@ -98,10 +103,15 @@ class PropertyController extends BaseController {
           default:
             break;
         }
-        $ret[array_search($item->term_entity_id, $ids)] = $curItem;
+        $curItem['probability'] = $item->probability;
+        //if (isset($curItem['description'])) {
+          //$curItem['probability'] += 1;
+        //}
+        $ret[$position] = $curItem;
       //}
     }
-    return array_values($ret);
+    usort($ret, array("PropertyController", "cmpItems"));
+    return $ret;
   }
 
   public function getPropertyLabel() {
