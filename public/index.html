@@ -60,10 +60,6 @@
 						<h2>Edit Item Suggestions</h2>
 						<p>Enter property in order to get items which are most likely missing it.</p>
 					</article>
-					<div id="history" class="pull-left history">
-						<button id="prevProperty" class="btn btn-primary"><i class="glyphicon glyphicon-arrow-left"></i></button>
-						<button id="nextProperty" class="btn btn-primary"><i class="glyphicon glyphicon-arrow-right"></i></button>
-					</div>
 					<div class="input-group">
 						<input type="text" class="form-control col-sm-12" placeholder="property" id="searchbox">
 						<span class="input-group-btn">
@@ -87,121 +83,6 @@
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/bloodhound.min.js"></script>
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.bundle.min.js"></script>
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.jquery.min.js"></script>
-		<script>
-
-			$(document).ready(function() {
-				var properties = new Bloodhound({
-					datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-					queryTokenizer: Bloodhound.tokenizers.whitespace,
-					remote: './api/properties?q=%QUERY',
-					limit: 7
-				});
-				var query = {};
-
-				var history = {'current': -1, 'queries': []};
-
-				var checkHistoryButtons = function() {
-					if (history.current <= 0) {
-						$('#prevProperty').attr('disabled', 'disabled');
-					} else {
-						$('#prevProperty').removeAttr('disabled');
-					}
-					if (history.current >= history.queries.length-1 || history.current === -1) {
-						$('#nextProperty').attr('disabled', 'disabled');
-					} else {
-						$('#nextProperty').removeAttr('disabled');
-					}
-				};
-				var setQuery = function(id) {
-					if (id >= 0 && id < history.queries.length) {
-						$('#searchbox').val(history.queries[id].searchterm);
-						$('.resultcontainer').html(history.queries[id].results);
-						history.current = id;
-					}
-					query.id = history.queries[id].id;
-					checkHistoryButtons();
-				};
-				var setPrevQuery = function() {
-					setQuery(history.current - 1);
-				};
-				var setNextQuery = function() {
-					setQuery(history.current + 1);
-				};
-				checkHistoryButtons();
-
-				$('#prevProperty').click(function() {
-					setPrevQuery();
-				});
-				$('#nextProperty').click(function() {
-					setNextQuery();
-				});
-
-				properties.initialize();
-
-				$('#searchbox').typeahead(null, {
-					name: 'properties',
-					displayKey: function(properties) {
-						return properties['label'];
-					},
-					templates: {
-						suggestion: function(properties) {
-							var ret = '<b>' + properties['label'] + '</b>';
-							if (properties.hasOwnProperty('description')) {
-								ret += '<br />' + properties['description'];
-							}
-							if (properties.hasOwnProperty('alias')) {
-								ret += '<br /><i>Also known as: ' + properties['alias'] + '</i>';
-							}
-							return ret;
-						}
-					},
-					source: properties.ttAdapter(),
-				}).bind("typeahead:selected", function(evt, prop) {
-					getResults(prop['id'], true);
-				});
-
-				var getResults = function(propertyId, addToHistory) {
-
-					$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
-					$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
-						$('.resultcontainer').text('');
-						var ret = '';
-						$.each(data, function(k, v) {
-							ret += '<p class="result"><a href="http://wikidata.org/wiki/Q' + v.id + '" target="_blank" data-item="' + v.id + '" data-property="' + propertyId + '"><strong>' + v.label + '</strong></a>';
-							if (v.hasOwnProperty('description')) {
-								ret += '<br />' + v.description;
-							}
-							ret += '</p>';
-						});
-						$('.resultcontainer').html(ret);
-						if (addToHistory) {
-							history.queries.push({'searchterm': $('#searchbox').val(), 'results': $('.resultcontainer').html(), 'id': propertyId});
-							history.current = history.queries.length - 1;
-							setQuery(history.current);
-							checkHistoryButtons();
-						}
-						$('.resultcontainer a').click(function() {
-							$.ajax('./api/addWatchTask?item=' + $(this).data('item') + '&property=' + $(this).data('property')).done(function(data) {
-							});
-						});
-					});
-				};
-				$('#refresh').click(function() {
-					console.log('query', query);
-					loadPage();
-				});
-				
-				location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
-				var loadPage = function() {
-					if (query.hasOwnProperty('id')) {
-						$.ajax('./api/propertyLabel?id=' + query.id).done(function(data) {
-							$('#searchbox').val(data[0].term_text);
-						});
-						getResults(query.id, false);
-					}
-				};
-				loadPage();
-			});
-		</script>
+		<script type="text/javascript" src="main.js"></script>
 	</body>
 </html>
