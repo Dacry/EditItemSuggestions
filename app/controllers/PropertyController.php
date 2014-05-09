@@ -56,62 +56,17 @@ class PropertyController extends BaseController {
     return array();
   }
 
-  function cmpItems($a, $b) {
-    if ($a['probability'] == $b['probability']) {
-        return 0;
-    }
-    return ($a['probability'] < $b['probability']) ? 1 : -1;
-  }
-
   public function getItemSuggestions() {
     $id = 0;
     if (Input::has('id')) $id = Input::get('id');
 
-    $items = DB::table('wb_terms as t1')
-      ->select(DB::raw("t1.term_entity_id as term_entity_id, t1.term_type as term_type, t1.term_text as term_text, t2.probability as probability"))
-      ->join('wbs_item_suggestions as t2', function($join) {
-      $join->on('t1.term_entity_id', '=', 't2.item_id');
-        })
-      ->where('t2.property_id', $id)
-      ->where('t1.term_entity_type', 'item')
-      ->where('t1.term_language', 'en')
-      ->where(function($query) {
-        $query->where('t1.term_type', '=', 'label')
-          ->orWhere('t1.term_type', '=', 'description');
-      })
+    $ids = DB::table('wbs_item_suggestionst')
+      ->select(DB::raw("item_id"))
+      ->where('property_id', $id)
       ->get();
     //$items[] = $item;
-    if (empty($items)) return array();
     
-    $ret = array();
-
-    foreach ($items as $item) {
-      //foreach($item as $i) {
-
-        $curItem = array("id" => $item->term_entity_id);
-        $position = $item->term_entity_id;
-        if (isset($ret[$position])) {
-          $curItem = $ret[$position];
-        }
-        switch ($item->term_type) {
-          case "description":
-            $curItem['description'] = $item->term_text;
-            break;
-          case "label":
-            $curItem['label'] = $item->term_text;
-            break;
-          default:
-            break;
-        }
-        $curItem['probability'] = $item->probability;
-        //if (isset($curItem['description'])) {
-          //$curItem['probability'] += 1;
-        //}
-        $ret[$position] = $curItem;
-      //}
-    }
-    usort($ret, array("PropertyController", "cmpItems"));
-    return $ret;
+    return $ids;
   }
 
   public function getPropertyLabel() {
