@@ -1,16 +1,9 @@
 $(document).ready(function() {
-	var properties = new Bloodhound({
-		datumTokenizer: Bloodhound.tokenizers.obj.whitespace('value'),
-		queryTokenizer: Bloodhound.tokenizers.whitespace,
-		remote: './api/properties?q=%QUERY',
-		limit: 7
-	});
 	var query = {};
+	location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
 
 	var api = 'http://www.wikidata.org/w/api.php';
-	var language = 'en';
-
-	properties.initialize();
+	var language = query.language ? query.language : 'en';
 
 	$('#searchbox').typeahead(null, {
 		name: 'properties',
@@ -83,7 +76,6 @@ $(document).ready(function() {
 		loadPage();
 	});
 
-	location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
 	var loadPage = function() {
 		if (query.hasOwnProperty('id')) {
 			id = 'P' + query['id'];

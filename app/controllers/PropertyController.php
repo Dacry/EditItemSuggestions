@@ -13,6 +13,7 @@ class PropertyController extends BaseController {
 		$ids = DB::table( 'wbs_item_suggestions' )
 			->select( DB::raw( "CONCAT('Q', item_id) as item_id" ) )
 			->where( 'property_id', $id )
+			->orderBy( 'probability', 'desc' )
 			->get();
 		return $ids;
 	}
