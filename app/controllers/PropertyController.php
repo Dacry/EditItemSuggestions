@@ -6,7 +6,7 @@ class PropertyController extends BaseController {
     if (Input::has('id')) $id = Input::get('id');
 
     $ids = DB::table('wbs_item_suggestionst')
-      ->select(DB::raw("item_id"))
+      ->select(DB::raw("'P'+item_id as pid"))
       ->where('property_id', $id)
       ->get();
     return $ids;
