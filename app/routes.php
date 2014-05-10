@@ -11,7 +11,6 @@
 |
 */
 
-Route::get('/api/properties', array("uses" => "PropertyController@getProperties"));
 Route::get('/api/itemSuggestions', array("uses" => "PropertyController@getItemSuggestions"));
-Route::get('/api/propertyLabel', array("uses" => "PropertyController@getPropertyLabel"));
 Route::get('/api/addWatchTask', array("uses" => "PropertyController@getAddWatchTask"));
+Route::get('/api/allPropertyIds', array("uses" => "PropertyController@getAllPropertyIds"));

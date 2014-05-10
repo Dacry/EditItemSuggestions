@@ -26,7 +26,8 @@ class PropertyController extends BaseController {
 
   public function getAllPropertyIds() {
     $ids = DB::table( 'wbs_item_suggestions' )
-      ->select( DB::raw( "DISTINCT CONCAT('P', property_id) as property_id" ) )
+      ->select( DB::raw( "CONCAT('P', property_id) as property_id" ) )
+      ->distinct()
       ->get();
     return $ids;
   }
