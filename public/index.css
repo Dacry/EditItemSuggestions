@@ -42,3 +42,7 @@
 .resultcontainer p.result:hover {
     background: #f5f5f5;
 }
+
+.uls-trigger {
+    float: right;
+}

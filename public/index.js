@@ -1,9 +1,46 @@
-$(document).ready(function() {
+function parseQueryParams() {
 	var query = {};
 	location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
+	return query;
 
+}
+
+$(document).ready(function() {
+	var query = parseQueryParams();
 	var api = 'http://www.wikidata.org/w/api.php';
-	var language = query.language ? query.language : 'en';
+	var language = 'en';
+
+	try {
+		language = localStorage.getItem('language') || language;
+	} catch (e) {}
+
+	$( '.uls-trigger' ).uls( {
+		onSelect : function( languageCode ) {
+			language = languageCode;
+			var languageName = $.uls.data.getAutonym( languageCode );
+			$( '.uls-trigger' ).text( languageName );
+			try {
+				localStorage.setItem('language', language);
+			} catch (e) {}
+			loadPage();
+		},
+		quickList: ['en', 'de', 'fr', 'it']
+	} );
+
+	(function(window,undefined){
+
+		var State = History.getState();
+
+		History.log('initial:', State.data, State.title, State.url);
+
+		History.Adapter.bind(window,'statechange',function(){
+			var State = History.getState();
+			History.log('popstate:', State.data, State.title, State.url);
+			query = parseQueryParams();
+			loadPage();
+		});
+
+	})(window);
 
 	$('#searchbox').typeahead(null, {
 		name: 'properties',
@@ -27,16 +64,16 @@ $(document).ready(function() {
 				url: api,
 				dataType: 'jsonp',
 				success: function(data) { process(data.search); },
-				data: {'action': 'wbsearchentities', 'format':'json',
-					   'language': language, 'search': query, 'type': 'property'}
+				data: {action: 'wbsearchentities', format:'json',
+					   language: language, search: query, type: 'property'}
 			})
 		}
-	}).bind("typeahead:selected", function(evt, prop) {
-		getResults(prop['id'], true);
+	}).bind("typeahead:selected", function(evt, data) {
+		var propertyId = data['id'];
+		History.pushState({id:propertyId}, 'Edit Item Suggestions - ' + propertyId, '?id=' + propertyId);
 	});
 
-	var getResults = function(propertyId, addToHistory) {
-
+	var getResults = function(propertyId) {
 		$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
 		$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
 			var ids = [];
@@ -47,8 +84,8 @@ $(document).ready(function() {
 			$.ajax({
 				url: api,
 				dataType: 'jsonp',
-				data: {'action': 'wbgetentities', 'format':'json',
-					'ids': ids.join('|'), 'props': 'labels|descriptions|aliases', 'languages': language},
+				data: {action: 'wbgetentities', format:'json', languagefallback: true,
+					   ids: ids.join('|'), props: 'labels|descriptions|aliases', languages: language},
 				success: function(data) {
 					var $resultcontainer = $('.resultcontainer');
 					$resultcontainer.text('');
@@ -64,13 +101,13 @@ $(document).ready(function() {
 					});
 					$resultcontainer.html(ret);
 					$('.resultcontainer a').click(function() {
-						$.ajax('./api/addWatchTask?item=' + $(this).data('item') + '&property=' + $(this).data('property')).done(function(data) {
-						});
+						$.ajax({url: './api/addWatchTask', data: { item:  $(this).data('item'), property: $(this).data('property')}});
 					});
 				}
 			});
 		});
 	};
+
 	$('#refresh').click(function() {
 		console.log('query', query);
 		loadPage();
@@ -78,13 +115,13 @@ $(document).ready(function() {
 
 	var loadPage = function() {
 		if (query.hasOwnProperty('id')) {
-			var id = 'P' + query['id'];
+			var id = query['id'];
 
 			$.ajax({
 				url: api,
 				dataType: 'jsonp',
-				data: {'action': 'wbgetentities', 'format':'json',
-					'ids': id, 'props': 'labels', 'languages': language},
+				data: {action: 'wbgetentities', format:'json',
+					ids: id, props: 'labels', languages: language},
 				success: function(data) {
 					var label = data.entities[id].labels[language].value;
 					$('#searchbox').val(label);

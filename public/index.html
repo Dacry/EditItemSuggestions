@@ -4,6 +4,9 @@
 		<meta charset="UTF-8">
 		<title>Edit Item Suggestions</title>
 		<link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
+		<link href="jquery.uls/css/jquery.uls.css" rel="stylesheet"/>
+		<link href="jquery.uls/css/jquery.uls.grid.css" rel="stylesheet"/>
+		<link href="jquery.uls/css/jquery.uls.lcd.css" rel="stylesheet"/>
 		<link rel="stylesheet" href="index.css" />
 	</head>
 	<body>
@@ -12,7 +15,7 @@
 				<div class="col-sm-8 col-sm-offset-2 well searchcontainer">
 					<article>					
 						<h2>Edit Item Suggestions</h2>
-						<p>Enter property in order to get items which are most likely missing it. <span id="uls">language</span></p>
+						<p>Enter property in order to get items which are most likely missing it. <a class="uls-trigger">language</a></p>
 					</article>
 					<div class="input-group">
 						<input type="text" class="form-control col-sm-12" placeholder="property" id="searchbox">
@@ -37,6 +40,13 @@
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/bloodhound.min.js"></script>
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.bundle.min.js"></script>
 		<script type="text/javascript" src="bower_components/typeahead.js/dist/typeahead.jquery.min.js"></script>
+		<script src="jquery.uls/src/jquery.uls.data.js"></script>
+		<script src="jquery.uls/src/jquery.uls.data.utils.js"></script>
+		<script src="jquery.uls/src/jquery.uls.lcd.js"></script>
+		<script src="jquery.uls/src/jquery.uls.languagefilter.js"></script>
+		<script src="jquery.uls/src/jquery.uls.regionfilter.js"></script>
+		<script src="jquery.uls/src/jquery.uls.core.js"></script>
+		<script src="jquery.history.js"></script>
 		<script type="text/javascript" src="index.js"></script>
 	</body>
 </html>
