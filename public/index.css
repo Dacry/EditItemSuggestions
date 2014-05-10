@@ -25,21 +25,21 @@
     cursor: pointer;
 }
 
-.resultcontainer p.result {
+#resultcontainer p.result {
     margin: 0;
     padding: 5px 5px 5px 5px;
     border-bottom: 1px solid #aaa;
 }
-.resultcontainer p.result:nth-child(even) {
+#resultcontainer p.result:nth-child(even) {
     background: #f9f9f9;
 }
-.resultcontainer p.result:nth-child(odd) {
+#resultcontainer p.result:nth-child(odd) {
     background: #fff;
 }
-.resultcontainer p.result:last-child {
+#resultcontainer p.result:last-child {
     border-bottom: 0 solid;
 }
-.resultcontainer p.result:hover {
+#resultcontainer p.result:hover {
     background: #f5f5f5;
 }
 
