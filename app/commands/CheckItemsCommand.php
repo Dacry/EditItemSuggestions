@@ -1,6 +1,8 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
 
@@ -46,19 +48,24 @@ class CheckItemsCommand extends Command {
 		// find tasks of the last 10 minutes
 		//$tasks = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->get();
 		$tasks = WbsTask::all();
+		$taskcount = count($tasks);
 
 		// pinpoint-query wikidata api
 		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); 
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 		foreach ($tasks as $t) {
-			curl_setopt($ch, CURLOPT_URL, "https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=".$t->item_id."&property=P".$t->property_id);
-			$data = curl_exec($ch);
-			$data = json_decode($data, true);
-
+			$item = 'Q' . $t->item_id;
+			$property = 'P' . $t->property_id;
+			$url = "http://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=$item&property=$property";
+			Log::info($url);
+			curl_setopt($ch, CURLOPT_URL, $url);
+			$response = curl_exec($ch);
+			$data = json_decode($response, true);
+			Log::info($response);
 			// check if the property was entered
 			if ( isset($data['claims']) && count($data['claims']) > 0) {
 				// User edited an item successfully
-				Log::info('property was entered', array('item_id' => $t->item_id, 'property_id' => $t->property_id));
+				Log::info('property was entered', array('item_id' => $item, 'property_id' => $property));
 				ItemSuggestion::where('property_id', $t->property_id)->where('item_id', $t->item_id)->delete();
 				Log::info('suggestion was deleted');
 				$t->forceDelete();
@@ -68,8 +75,7 @@ class CheckItemsCommand extends Command {
 		curl_close($ch);
 
 		$deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->delete();
-		Log::info('deleted ' . $deletedRows . ' tasks that were older than 10 minutes');
-
+		Log::info("deleted $deletedRows of $taskcount tasks");
 		Log::info('finished cron job checkitems');
 
 	}

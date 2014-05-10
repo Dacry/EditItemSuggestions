@@ -1,5 +1,9 @@
 <?php
 
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Input;
+
 class PropertyController extends BaseController {
 
 	public function getItemSuggestions() {
@@ -11,9 +15,10 @@ class PropertyController extends BaseController {
 		}
 
 		$ids = DB::table( 'wbs_item_suggestions' )
-			->select( DB::raw( "CONCAT('Q', item_id) as item_id" ) )
+			->select( DB::raw( "CONCAT('Q', item_id) as item_id, probability" ) )
 			->where( 'property_id', $id )
 			->orderBy( 'probability', 'desc' )
+			->limit( 500 )
 			->get();
 		return $ids;
 	}
@@ -24,17 +29,24 @@ class PropertyController extends BaseController {
 		if ( Input::has( 'item' ) ) $item = Input::get( 'item' );
 		if ( Input::has( 'property' ) ) $property = Input::get( 'property' );
 
-		if ( $item && $property ) {
-			$task = NULL;
-			if ( $existingTask = WbsTask::where( 'item_id', $item )->where( 'property_id', $property )->first() ) {
-				$task = $existingTask;
-			} else {
-				$task = new WbsTask();
-				$task->item_id = $item;
-				$task->property_id = $property;
-			}
-			$task->touch();
-			$task->save();
+		$itemid = substr( $item, 1);
+		$propertyid = substr( $property, 1);
+
+		if (! ($item && $property) ) {
+			return 'invalid ids';
 		}
+
+		$task = NULL;
+		if ( $existingTask = WbsTask::where( 'item_id', $itemid )->where( 'property_id', $propertyid )->first() ) {
+			$task = $existingTask;
+		} else {
+			$task = new WbsTask();
+			$task->item_id = $itemid;
+			$task->property_id = $propertyid;
+		}
+		$task->touch();
+		$task->save();
+
+		return 0;
 	}
 }

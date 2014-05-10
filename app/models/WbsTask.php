@@ -1,6 +1,8 @@
 <?php
 
-class WbsTask extends Eloquent {
+use Illuminate\Database\Eloquent\Model;
+
+class WbsTask extends Model {
 
 	protected $table = 'wbs_tasks';
 	

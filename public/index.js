@@ -98,7 +98,7 @@ $(document).ready(function() {
 					ret += '</p>';
 				});
 				$('.resultcontainer').append(ret);
-				$('.resultcontainer a').click(function() {
+				$('.resultcontainer a').off('click').on('click', function() {
 					$.ajax({url: './api/addWatchTask', data: { item:  $(this).data('item'), property: $(this).data('property')}});
 				});
 				if (ids.length > 50) {
