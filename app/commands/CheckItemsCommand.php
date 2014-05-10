@@ -57,17 +57,17 @@ class CheckItemsCommand extends Command {
 			$item = 'Q' . $t->item_id;
 			$property = 'P' . $t->property_id;
 			$url = "http://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=$item&property=$property";
-			Log::info($url);
+			//Log::info($url);
 			curl_setopt($ch, CURLOPT_URL, $url);
 			$response = curl_exec($ch);
+			//Log::info($response);
 			$data = json_decode($response, true);
-			Log::info($response);
 			// check if the property was entered
 			if ( isset($data['claims']) && count($data['claims']) > 0) {
 				// User edited an item successfully
 				Log::info('property was entered', array('item_id' => $item, 'property_id' => $property));
-				ItemSuggestion::where('property_id', $t->property_id)->where('item_id', $t->item_id)->delete();
-				Log::info('suggestion was deleted');
+				$deleted = ItemSuggestion::where('property_id', $t->property_id)->where('item_id', $t->item_id)->delete();
+				Log::info('suggestion was deleted', array( 'status' => $deleted ));
 				$t->forceDelete();
 				Log::info('task was deleted');
 			}
