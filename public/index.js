@@ -2,7 +2,6 @@ function parseQueryParams() {
 	var query = {};
 	location.search.substr(1).split("&").forEach(function(item) {query[item.split("=")[0]] = item.split("=")[1]});
 	return query;
-
 }
 
 $(document).ready(function() {
@@ -37,7 +36,7 @@ $(document).ready(function() {
 			var State = History.getState();
 			History.log('popstate:', State.data, State.title, State.url);
 			query = parseQueryParams();
-			loadPage();
+			getResults(query.id);
 		});
 
 	})(window);
@@ -127,7 +126,7 @@ $(document).ready(function() {
 					$('#searchbox').val(label);
 				}
 			});
-			getResults(query.id, false);
+			getResults(query.id);
 		}
 	};
 	loadPage();
