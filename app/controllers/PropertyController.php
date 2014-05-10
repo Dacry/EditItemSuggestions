@@ -23,6 +23,13 @@ class PropertyController extends BaseController {
 		return $ids;
 	}
 
+  public function getAllPropertyIds() {
+    $ids = DB::table( 'wbs_item_suggestions' )
+      ->select( DB::raw( "DISTINCT CONCAT('P', property_id) as property_id" ) )
+      ->get();
+    return $ids;
+  }
+
 	public function getAddWatchTask() {
 		$item = 0;
 		$property = 0;
@@ -49,4 +56,5 @@ class PropertyController extends BaseController {
 
 		return 0;
 	}
+
 }
