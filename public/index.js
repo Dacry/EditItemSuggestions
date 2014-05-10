@@ -5,19 +5,20 @@ function parseQueryParams() {
 }
 
 $(document).ready(function() {
-	var query = parseQueryParams();
+	history.replaceState(parseQueryParams(), location.title, location.search);
 	var api = 'http://www.wikidata.org/w/api.php';
 	var language = 'en';
 
+	var $ulstrigger = $( '.uls-trigger' );
 	try {
 		language = localStorage.getItem('language') || language;
+		$ulstrigger.text( $.uls.data.getAutonym( language ) );
 	} catch (e) {}
 
-	$( '.uls-trigger' ).uls( {
+	$ulstrigger.uls( {
 		onSelect : function( languageCode ) {
 			language = languageCode;
-			var languageName = $.uls.data.getAutonym( languageCode );
-			$( '.uls-trigger' ).text( languageName );
+			$ulstrigger.text( $.uls.data.getAutonym( languageCode ) );
 			try {
 				localStorage.setItem('language', language);
 			} catch (e) {}
@@ -26,20 +27,10 @@ $(document).ready(function() {
 		quickList: ['en', 'de', 'fr', 'it']
 	} );
 
-	(function(window,undefined){
-
-		var State = History.getState();
-
-		History.log('initial:', State.data, State.title, State.url);
-
-		History.Adapter.bind(window,'statechange',function(){
-			var State = History.getState();
-			History.log('popstate:', State.data, State.title, State.url);
-			query = parseQueryParams();
-			loadPage();
-		});
-
-	})(window);
+	$(window).on('popstate', function(e) {
+		console.log('popstate:', history.state);
+		loadPage();
+	});
 
 	$('#searchbox').typeahead(null, {
 		name: 'properties',
@@ -69,12 +60,13 @@ $(document).ready(function() {
 		}
 	}).bind("typeahead:selected", function(evt, data) {
 		var propertyId = data['id'];
-		History.pushState({id:propertyId}, 'Edit Item Suggestions - ' + propertyId, '?id=' + propertyId);
+		history.pushState({id:propertyId}, 'Edit Item Suggestions - ' + propertyId, '?id=' + propertyId);
+		getResults(propertyId);
 	});
 
 	var getResults = function(propertyId) {
 		$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
-		$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
+		$.ajax({ url: './api/itemSuggestions', data: { id: propertyId } }).done(function(data) {
 			var ids = [];
 			$.each(data, function(k, v) {
 				ids.push( v.item_id);
@@ -108,25 +100,27 @@ $(document).ready(function() {
 	};
 
 	$('#refresh').click(function() {
-		console.log('query', query);
+		console.log('query', history.state);
 		loadPage();
 	});
 
 	var loadPage = function() {
-		if (query.hasOwnProperty('id')) {
-			var id = query['id'];
-
+		if (history.state.hasOwnProperty('id')) {
+			var id = history.state['id'];
 			$.ajax({
 				url: api,
 				dataType: 'jsonp',
-				data: {action: 'wbgetentities', format:'json',
-					ids: id, props: 'labels', languages: language},
+				data: {action: 'wbgetentities', format:'json', languagefallback: true,
+					   ids: id, props: 'labels', languages: language},
 				success: function(data) {
 					var label = data.entities[id].labels[language].value;
 					$('#searchbox').val(label);
 				}
 			});
-			getResults(query.id);
+			getResults(id);
+		} else {
+			$('.resultcontainer' ).empty();
+			$('#searchbox' ).val('');
 		}
 	};
 	loadPage();
