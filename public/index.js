@@ -39,7 +39,7 @@ $(document).ready(function() {
 
 		$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
 		$.ajax('./api/itemSuggestions?id=' + propertyId).done(function(data) {
-			ids = [];
+			var ids = [];
 			$.each(data, function(k, v) {
 				ids.push( v.item_id);
 			});
@@ -50,12 +50,12 @@ $(document).ready(function() {
 				data: {'action': 'wbgetentities', 'format':'json',
 					'ids': ids.join('|'), 'props': 'labels|descriptions|aliases', 'languages': language},
 				success: function(data) {
-					$resultcontainer = $('.resultcontainer');
+					var $resultcontainer = $('.resultcontainer');
 					$resultcontainer.text('');
 					var ret = '';
-					entities = data.entities;
+					var entities = data.entities;
 					$.each(ids, function(k, id) {
-						label = entities[id].labels ? entities[id].labels[language].value : id;
+						var label = entities[id].labels ? entities[id].labels[language].value : id;
 						ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
 						if (entities[id].descriptions) {
 							ret += '<br />' + entities[id].descriptions[language].value;
@@ -78,7 +78,7 @@ $(document).ready(function() {
 
 	var loadPage = function() {
 		if (query.hasOwnProperty('id')) {
-			id = 'P' + query['id'];
+			var id = 'P' + query['id'];
 
 			$.ajax({
 				url: api,
@@ -86,7 +86,7 @@ $(document).ready(function() {
 				data: {'action': 'wbgetentities', 'format':'json',
 					'ids': id, 'props': 'labels', 'languages': language},
 				success: function(data) {
-					label = data.entities[id].labels[language].value;
+					var label = data.entities[id].labels[language].value;
 					$('#searchbox').val(label);
 				}
 			});
