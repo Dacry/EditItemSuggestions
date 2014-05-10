@@ -18,6 +18,7 @@ class PropertyController extends BaseController {
 			->select( DB::raw( "CONCAT('Q', item_id) as item_id, probability" ) )
 			->where( 'property_id', $id )
 			->orderBy( 'probability', 'desc' )
+			->orderBy( 'item_id', 'asc' )
 			->limit( 500 )
 			->get();
 		return $ids;

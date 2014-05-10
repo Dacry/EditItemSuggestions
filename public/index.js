@@ -66,12 +66,12 @@ $(document).ready(function() {
 
 	var getResults = function(propertyId) {
 		$('#loadingindicator').show();
+		$('#resultcontainer').empty();
 		$.ajax({ url: './api/itemSuggestions', data: { id: propertyId } }).done(function(data) {
 			var ids = [];
 			$.each(data, function(k, v) {
 				ids.push( v.item_id);
 			});
-			$('#resultcontainer').empty();
 			insertSuggestions(propertyId, ids);
 		});
 	};
