@@ -36,7 +36,7 @@ $(document).ready(function() {
 			var State = History.getState();
 			History.log('popstate:', State.data, State.title, State.url);
 			query = parseQueryParams();
-			getResults(query.id);
+			loadPage();
 		});
 
 	})(window);
