@@ -65,13 +65,13 @@ $(document).ready(function() {
 	});
 
 	var getResults = function(propertyId) {
-		$('.resultcontainer').html('<img src="img/ajax-loader.gif" /> Please wait while the data is being loaded...');
+		$('#loadingindicator').show();
 		$.ajax({ url: './api/itemSuggestions', data: { id: propertyId } }).done(function(data) {
 			var ids = [];
 			$.each(data, function(k, v) {
 				ids.push( v.item_id);
 			});
-			$('.resultcontainer').empty();
+			$('#resultcontainer').empty();
 			insertSuggestions(propertyId, ids);
 		});
 	};
@@ -90,20 +90,25 @@ $(document).ready(function() {
 				var ret = '';
 				var entities = data.entities;
 				$.each(queryIds, function(k, id) {
-					var label = entities[id].labels ? entities[id].labels[language].value : id;
-					ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
-					if (entities[id].descriptions) {
-						ret += '<br />' + entities[id].descriptions[language].value;
+					if (id in entities) {
+						var label = entities[id].labels ? entities[id].labels[language].value : id;
+						ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
+						if (entities[id].descriptions) {
+							ret += '<br />' + entities[id].descriptions[language].value;
+						}
+						ret += '</p>';
 					}
-					ret += '</p>';
 				});
-				$('.resultcontainer').append(ret);
-				$('.resultcontainer a').off('click').on('click', function() {
+				$resultcontainer = $('#resultcontainer');
+				$resultcontainer.append(ret);
+				$resultcontainer.find('a').off('click').on('click', function() {
 					$.ajax({url: './api/addWatchTask', data: { item:  $(this).data('item'), property: $(this).data('property')}});
 				});
 				if (ids.length > 50) {
 					var remaining = ids.slice(50);
 					insertSuggestions(propertyId, remaining);
+				} else {
+					$('#loadingindicator').hide();
 				}
 			}
 		});
@@ -115,7 +120,7 @@ $(document).ready(function() {
 	});
 
 	var loadPage = function() {
-		if (history.state.hasOwnProperty('id')) {
+		if ('id' in history.state) {
 			var id = history.state['id'];
 			$.ajax({
 				url: api,
@@ -129,7 +134,7 @@ $(document).ready(function() {
 			});
 			getResults(id);
 		} else {
-			$('.resultcontainer' ).empty();
+			$('#resultcontainer' ).empty();
 			$('#searchbox' ).val('');
 		}
 	};
