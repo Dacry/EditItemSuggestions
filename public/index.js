@@ -71,31 +71,41 @@ $(document).ready(function() {
 			$.each(data, function(k, v) {
 				ids.push( v.item_id);
 			});
-			ids = ids.slice(0,50);
-			$.ajax({
-				url: api,
-				dataType: 'jsonp',
-				data: {action: 'wbgetentities', format:'json', languagefallback: true,
-					   ids: ids.join('|'), props: 'labels|descriptions|aliases', languages: language},
-				success: function(data) {
-					var $resultcontainer = $('.resultcontainer');
-					$resultcontainer.text('');
-					var ret = '';
-					var entities = data.entities;
-					$.each(ids, function(k, id) {
-						var label = entities[id].labels ? entities[id].labels[language].value : id;
-						ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
-						if (entities[id].descriptions) {
-							ret += '<br />' + entities[id].descriptions[language].value;
-						}
-						ret += '</p>';
-					});
-					$resultcontainer.html(ret);
-					$('.resultcontainer a').click(function() {
-						$.ajax({url: './api/addWatchTask', data: { item:  $(this).data('item'), property: $(this).data('property')}});
-					});
+			$('.resultcontainer').empty();
+			insertSuggestions(propertyId, ids);
+		});
+	};
+
+	var insertSuggestions = function(propertyId, ids) {
+		var queryIds = ids.slice(0,50);
+		$.ajax({
+			url: api,
+			dataType: 'jsonp',
+			data: {action: 'wbgetentities', format:'json', languagefallback: true,
+				ids: queryIds.join('|'), props: 'labels|descriptions|aliases', languages: language},
+			success: function(data) {
+				if (history.state.id != propertyId) {
+					return; // another item was selected
 				}
-			});
+				var ret = '';
+				var entities = data.entities;
+				$.each(queryIds, function(k, id) {
+					var label = entities[id].labels ? entities[id].labels[language].value : id;
+					ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
+					if (entities[id].descriptions) {
+						ret += '<br />' + entities[id].descriptions[language].value;
+					}
+					ret += '</p>';
+				});
+				$('.resultcontainer').append(ret);
+				$('.resultcontainer a').click(function() {
+					$.ajax({url: './api/addWatchTask', data: { item:  $(this).data('item'), property: $(this).data('property')}});
+				});
+				if (ids.length > 50) {
+					var remaining = ids.slice(50);
+					insertSuggestions(propertyId, remaining);
+				}
+			}
 		});
 	};
 

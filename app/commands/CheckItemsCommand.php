@@ -51,12 +51,12 @@ class CheckItemsCommand extends Command {
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE); 
 		foreach ($tasks as $t) {
-			curl_setopt($ch, CURLOPT_URL, "https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=Q".$t->item_id."&property=P".$t->property_id); 
+			curl_setopt($ch, CURLOPT_URL, "https://www.wikidata.org/w/api.php?action=wbgetclaims&format=json&entity=".$t->item_id."&property=P".$t->property_id);
 			$data = curl_exec($ch);
 			$data = json_decode($data, true);
 
 			// check if the property was entered
-			if (count($data['claims']) > 0) {
+			if ( isset($data['claims']) && count($data['claims']) > 0) {
 				// User edited an item successfully
 				Log::info('property was entered', array('item_id' => $t->item_id, 'property_id' => $t->property_id));
 				ItemSuggestion::where('property_id', $t->property_id)->where('item_id', $t->item_id)->delete();
