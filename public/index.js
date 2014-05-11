@@ -5,6 +5,7 @@ function parseQueryParams() {
 }
 
 $(document).ready(function() {
+
 	history.replaceState(parseQueryParams(), location.title, location.search);
 	var api = 'http://www.wikidata.org/w/api.php';
 	var language = 'en';
@@ -26,6 +27,18 @@ $(document).ready(function() {
 		},
 		quickList: ['en', 'de', 'fr', 'it']
 	} );
+
+	var ids = [];
+	$.ajax({ 
+		url: './api/allPropertyIds', 
+		success: function(data) {
+			var idMap = {};
+			$.each(data, function(k, v) {
+				idMap[v.property_id] = true;
+			});
+			ids = idMap;
+		}
+	});
 
 	$(window).on('popstate', function(e) {
 		console.log('popstate:', history.state);
@@ -50,11 +63,20 @@ $(document).ready(function() {
 			}
 		},
 		source: function(query, process) {
+			//Todo test if in idMap...
 			$.ajax({
 				url: api,
 				dataType: 'jsonp',
-				success: function(data) { process(data.search); },
-				data: {action: 'wbsearchentities', format:'json',
+				success: function(data) { 
+					res = [];
+					$.each(data.search, function(k, property) {
+						if (property.id in ids || ids.length == 0){
+							res.push(property);
+						}
+					});
+					process(res);
+				},
+				data: {action: 'wbsearchentities', format:'json', limit: 20,
 					   language: language, search: query, type: 'property'}
 			})
 		}
@@ -70,7 +92,7 @@ $(document).ready(function() {
 		$.ajax({ url: './api/itemSuggestions', data: { id: propertyId } }).done(function(data) {
 			var ids = [];
 			$.each(data, function(k, v) {
-				ids.push( v.item_id);
+				ids.push(v.item_id);
 			});
 			insertSuggestions(propertyId, ids);
 		});
