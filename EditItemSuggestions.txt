@@ -8,24 +8,6 @@ CREATE DATABASE `edit_item_suggestions`;
 
 use edit_item_suggestions;
 
-CREATE TABLE `wb_terms` (
-	`term_row_id` BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-	`term_entity_id` INT(10) UNSIGNED NOT NULL,
-	`term_entity_type` VARBINARY(32) NOT NULL,
-	`term_language` VARBINARY(32) NOT NULL,
-	`term_type` VARBINARY(32) NOT NULL,
-	`term_text` VARBINARY(255) NOT NULL,
-	`term_search_key` VARBINARY(255) NOT NULL,
-	`term_weight` FLOAT UNSIGNED NOT NULL DEFAULT '0',
-	PRIMARY KEY (`term_row_id`),
-	INDEX `termEntityId` (`term_entity_id`),
-	INDEX `entityType_language_termType` (`term_entity_type`, `term_language`, `term_type`),
-	INDEX `entityType_language_termType_termSearchKey` (`term_entity_type`, `term_language`, `term_type`, `term_search_key`)
-)
-COLLATE='binary'
-ENGINE=InnoDB
-AUTO_INCREMENT=364293295;
-
 CREATE TABLE `wbs_item_suggestions` (
 	`property_id` INT(11) NOT NULL AUTO_INCREMENT,
 	`item_id` INT(11) NOT NULL DEFAULT '0',
@@ -40,22 +22,16 @@ AUTO_INCREMENT=1083;
 
 
 
-
-
 monthly for updates:
 
 
 
 find latest pages-articles.xml.bz2
-find latest wb_terms.sql.gz
 
 run:
 
 python dumpconverter.py pages-articles.xml.bz2 pages.csv
 python createEditItemSuggestionCsv.py pages.csv editItemSuggestions.csv
-
-python wbTermsParser.py wb_terms.sql.gz wbTerms.csv
-
 
 sql>
 
@@ -73,21 +49,3 @@ LOAD DATA [LOCAL] INFILE 'editItemSuggestions.csv' INTO TABLE wbs_item_suggestio
 ALTER TABLE `wbs_item_suggestions` ADD INDEX `property_id` (`property_id`);
 
 ALTER TABLE `wbs_item_suggestions` ADD INDEX `item_id` (`item_id`);
-
-
-TRUNCATE `wb_terms`;
-
-Alter TABLE `wb_terms` DROP	INDEX `termEntityId`;
-
-Alter TABLE `wb_terms` DROP	INDEX `entityType_language_termType`;
-
-Alter TABLE `wb_terms` DROP	INDEX `entityType_language_termType_termSearchKey`;
-
-LOAD DATA [LOCAL] INFILE 'pages.csv' INTO TABLE wb_terms FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY "'" LINES TERMINATED BY '\n';
-
-Alter TABLE `wb_terms` ADD	INDEX `termEntityId` (`term_entity_id`);
-
-Alter TABLE `wb_terms` ADD	INDEX `entityType_language_termType` (`term_entity_type`, `term_language`, `term_type`);
-
-Alter TABLE `wb_terms` ADD	INDEX `entityType_language_termType_termSearchKey` (`term_entity_type`, `term_language`, `term_type`, `term_search_key`);
-
