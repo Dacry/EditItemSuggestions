@@ -102,12 +102,17 @@ $(document).ready(function() {
 	var bindToggleEvent = function() {
 		$('.result i').off('click').click(function() {
 			var $that = $(this);
-			var $extract = $(this).parent().children('.extract');
-			if ($extract.length) {
-				$extract.slideToggle();
-				$that.toggleClass('glyphicon-plus-sign').toggleClass('glyphicon-minus-sign');
+			var $abstract = $(this).parent().children('.abstract');
+			if ($abstract.length) { //loading abstract started
+				console.log($abstract.length)
+				$abstract.slideToggle();
+				if ($abstract.length > 1){  //loading abstract finished
+					$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+				}
 			} else {
 				var qId = $that.parent().attr('id');
+				var $abstractObj = $('<div class="abstract"> </div>');
+				$('#' + qId).append($abstractObj);
 				$.ajax({
 					url: api,
 					dataType: 'jsonp',
@@ -133,8 +138,7 @@ $(document).ready(function() {
 									queryLanguage = sitelinks[Object.keys(sitelinks)[0]].site.substr(0, 2);
 								}
 							}
-							
-							
+
 							if (title) {
 								$.ajax({
 									url: '//' + queryLanguage + '.wikipedia.org/w/api.php',
@@ -147,15 +151,14 @@ $(document).ready(function() {
 										format: 'json'
 									},
 									success: function(data2) {
-										var extractContent = (data2.query.pages[Object.keys(data2.query.pages)[0]].extract || "");
-
+										var abstractContent = (data2.query.pages[Object.keys(data2.query.pages)[0]].extract || "");
 										var url;
 										if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
 										if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
-										var $extractObj = $('<div class="extract">' + extractContent + '<a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div>');
-										$('#' + qId).append($extractObj);
-										$extractObj.slideDown();
-										$that.toggleClass('glyphicon-plus-sign').toggleClass('glyphicon-minus-sign');
+										var $abstractObj = $('<div class="abstract">' + abstractContent + '<a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div>');
+										$('#' + qId).append($abstractObj);
+										$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+										$abstractObj.slideDown();
 									}
 								});
 							}
