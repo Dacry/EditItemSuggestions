@@ -43,6 +43,11 @@
     background: #f5f5f5;
 }
 
+#resultcontainer div.extract {
+    margin-top: 15px;
+    display: none;
+}
+
 .uls-trigger {
     float: right;
 }

@@ -95,16 +95,94 @@ $(document).ready(function() {
 				ids.push(v.item_id);
 			});
 			insertSuggestions(propertyId, ids);
+			bindToggleEvent();
 		});
 	};
 
+	var bindToggleEvent = function() {
+		$('.result i').off('click').click(function() {
+			var $that = $(this);
+			var $abstract = $(this).parent().children('.abstract');
+			if ($abstract.length) { //loading abstract started
+				console.log($abstract.length)
+				$abstract.slideToggle();
+				if ($abstract.length > 1){  //loading abstract finished
+					$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+				}
+			} else {
+				var qId = $that.parent().attr('id');
+				var $abstractObj = $('<div class="abstract"> </div>');
+				$('#' + qId).append($abstractObj);
+				$.ajax({
+					url: api,
+					dataType: 'jsonp',
+					data: {action: 'wbgetentities', format:'json',
+						ids: qId, props: 'sitelinks/urls'},
+					success: function(data1) {
+						var sitelinks = data1.entities[qId].sitelinks;
+						var title = null;
+						if (sitelinks) {
+
+							var preferredLanguages = [language, 'en', 'de', 'fr', 'es', 'it'];
+							for (l in preferredLanguages) {
+								title = queryLanguageCheck(sitelinks, preferredLanguages[l]);
+								queryLanguage = preferredLanguages[l];
+								if (title !== undefined || title !== null) break;
+							}
+							if (title === undefined || title === null) {
+								title = queryLanguageCheck(sitelinks, sitelinks[Object.keys(sitelinks)[0]].title);
+								queryLanguage = sitelinks[Object.keys(sitelinks)[0]].site.substr(0, 2);
+							
+								if (sitelinks[Object.keys(sitelinks)[0]].hasOwnProperty('title')) {
+									title = sitelinks[Object.keys(sitelinks)[0]].title;
+									queryLanguage = sitelinks[Object.keys(sitelinks)[0]].site.substr(0, 2);
+								}
+							}
+
+							if (title) {
+								$.ajax({
+									url: '//' + queryLanguage + '.wikipedia.org/w/api.php',
+									dataType: 'jsonp',
+									data: {
+										action: 'query',
+										prop: 'extracts',
+										exintro: "",
+										titles: title,
+										format: 'json'
+									},
+									success: function(data2) {
+										var abstractContent = (data2.query.pages[Object.keys(data2.query.pages)[0]].extract || "");
+										var url;
+										if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
+										if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
+										var $abstractObj = $('<div class="abstract">' + abstractContent + '<a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div>');
+										$('#' + qId).append($abstractObj);
+										$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+										$abstractObj.slideDown();
+									}
+								});
+							}
+						}
+					}
+				});
+			}
+		});
+	}
+
+	var queryLanguageCheck = function(pSitelinks, pLanguage) {
+		if (pSitelinks[pLanguage.substr(0, 2) + 'wiki'] && pSitelinks[pLanguage.substr(0, 2) + 'wiki'].hasOwnProperty('title')) {
+			return pSitelinks[pLanguage.substr(0, 2) + 'wiki'].title;
+		}
+	}
+
 	var insertSuggestions = function(propertyId, ids) {
 		var queryIds = ids.slice(0,50);
+		var queryLanguage = language;
 		$.ajax({
 			url: api,
 			dataType: 'jsonp',
 			data: {action: 'wbgetentities', format:'json', languagefallback: true,
-				ids: queryIds.join('|'), props: 'labels|descriptions|aliases', languages: language},
+				ids: queryIds.join('|'), props: 'labels|descriptions|aliases', languages: queryLanguage},
 			success: function(data) {
 				if (history.state.id != propertyId) {
 					return; // another item was selected
@@ -113,10 +191,10 @@ $(document).ready(function() {
 				var entities = data.entities;
 				$.each(queryIds, function(k, id) {
 					if (id in entities) {
-						var label = entities[id].labels ? entities[id].labels[language].value : id;
-						ret += '<p class="result"><a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
+						var label = entities[id].labels ? entities[id].labels[queryLanguage].value : id;
+						ret += '<p class="result" id="' + id + '"><i class="glyphicon glyphicon-plus-sign" style="color: #888; font-size: 11px;"></i> <a href="http://wikidata.org/wiki/' + id + '" target="_blank" data-item="' + id + '" data-property="' + propertyId + '"><strong>' + label + '</strong></a>';
 						if (entities[id].descriptions) {
-							ret += '<br />' + entities[id].descriptions[language].value;
+							ret += '<br />' + entities[id].descriptions[queryLanguage].value;
 						}
 						ret += '</p>';
 					}
@@ -132,12 +210,12 @@ $(document).ready(function() {
 				} else {
 					$('#loadingindicator').hide();
 				}
+				bindToggleEvent();
 			}
 		});
-	};
+	}
 
 	$('#refresh').click(function() {
-		console.log('query', history.state);
 		loadPage();
 	});
 
