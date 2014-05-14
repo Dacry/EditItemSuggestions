@@ -74,7 +74,7 @@ class CheckItemsCommand extends Command {
 		}
 		curl_close($ch);
 
-		$deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->delete();
+		$deletedRows = WbsTask::where('updated_at', '<', Carbon::now()->subMinutes(10)->toDateTimeString())->forceDelete();
 		Log::info("deleted $deletedRows of $taskcount tasks");
 		Log::info('finished cron job checkitems');
 
