@@ -104,11 +104,9 @@ $(document).ready(function() {
 			var $that = $(this);
 			var $abstract = $(this).parent().children('.abstract');
 			if ($abstract.length) { //loading abstract started
-				console.log($abstract.length)
-				$abstract.slideToggle();
-				if ($abstract.length > 1){  //loading abstract finished
+				$abstract.stop().slideToggle(400, function() {
 					$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
-				}
+				});
 			} else {
 				var qId = $that.parent().attr('id');
 				var $abstractObj = $('<div class="abstract"> </div>');
@@ -116,8 +114,12 @@ $(document).ready(function() {
 				$.ajax({
 					url: api,
 					dataType: 'jsonp',
-					data: {action: 'wbgetentities', format:'json',
-						ids: qId, props: 'sitelinks/urls'},
+					data: {
+						action: 'wbgetentities',
+						format:'json',
+						ids: qId,
+						props: 'sitelinks/urls'
+					},
 					success: function(data1) {
 						var sitelinks = data1.entities[qId].sitelinks;
 						var title = null;
@@ -145,20 +147,55 @@ $(document).ready(function() {
 									dataType: 'jsonp',
 									data: {
 										action: 'query',
-										prop: 'extracts',
+										prop: 'extracts|pageimages',
 										exintro: "",
 										titles: title,
 										format: 'json'
 									},
 									success: function(data2) {
-										var abstractContent = (data2.query.pages[Object.keys(data2.query.pages)[0]].extract || "");
+										//console.log(data2);
+										var page = data2.query.pages[Object.keys(data2.query.pages)[0]];
+										var abstractContent = (page.extract || '');
 										var url;
-										if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
-										if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
-										var $abstractObj = $('<div class="abstract">' + abstractContent + '<a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div>');
-										$('#' + qId).append($abstractObj);
-										$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
-										$abstractObj.slideDown();
+										var imageUrl = page.pageimage || '';
+
+										// get the article image
+										if (imageUrl !== '') {
+											$.ajax({
+												url: '//en.wikipedia.org/w/api.php',
+												dataType: 'jsonp',
+												data: {
+													action: 'query',
+													titles: 'File:' + imageUrl,
+													prop: 'imageinfo',
+													iiprop: 'url',
+													format: 'json'
+												},
+												success: function(resultData) {
+													imageUrl = resultData.query.pages['-1'].imageinfo[0].url;
+													if (imageUrl !== '') {
+														// get the abstract
+														$($abstractObj).css('display', 'none').html('<div class="row content"><div class="col-sm-8">' + abstractContent + '</div><div class="col-sm-4"><img id="' + qId + '-img" src="' + imageUrl + '"></div></div><div class="row meta"><div class="col-sm-12"><a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div></div>');
+														if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
+														if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
+														$abstractObj.stop().slideDown(400, function() {
+															$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+														});
+													}
+												}
+											});
+										} else {
+
+											// get the abstract
+											$($abstractObj).css('display', 'none').html('<div class="row content"><div class="col-sm-8">' + abstractContent + '</div><div class="col-sm-4"></div></div><div class="row meta"><div class="col-sm-12"><a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div></div>');
+											if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
+											if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
+											$abstractObj.stop().slideDown(400, function() {
+												$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
+											});
+										}
+
+										bindToggleEvent();
 									}
 								});
 							}

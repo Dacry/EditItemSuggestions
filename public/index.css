@@ -48,6 +48,11 @@
     display: none;
 }
 
+.content img {
+    max-width: 100%;
+    width: 100%;
+}
+
 .uls-trigger {
     float: right;
 }
