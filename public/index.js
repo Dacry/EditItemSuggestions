@@ -155,7 +155,7 @@ $(document).ready(function() {
 										var url;
 										if (sitelinks[queryLanguage + 'wiki'] && sitelinks[queryLanguage + 'wiki'].url) url = sitelinks[queryLanguage + 'wiki'].url;
 										if (url === undefined) url = sitelinks[Object.keys(sitelinks)[0]].url;
-										var $abstractObj = $('<div class="abstract">' + abstractContent + '<a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div>');
+										var $abstractObj = $('<div class="abstract"><div class="row"><div class="col-sm-8">' + abstractContent + '</div></div><div class="row"><div class="col-sm-12 meta"><a target="_blank" href="' + url + '"><img src="//wikipedia.org/favicon.ico" height="14px" style="margin-top: -3px;"> Wiki-Page</a></div></div></div>');
 										$('#' + qId).append($abstractObj);
 										$that.toggleClass('glyphicon-minus-sign').toggleClass('glyphicon-plus-sign');
 										$abstractObj.slideDown();
