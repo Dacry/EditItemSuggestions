@@ -1,5 +1,5 @@
 from collections import defaultdict
-from propertysuggester.utils.datatypes import Entity
+from editItemSuggestions.utils.datatypes import Entity
 
 
 def compute_table(generator):

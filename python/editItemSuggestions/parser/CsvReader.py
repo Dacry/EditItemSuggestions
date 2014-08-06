@@ -9,7 +9,7 @@ with open("file.csv", "r") as f:
 """
 import csv
 
-from propertysuggester.utils.datatypes import Claim, Entity
+from editItemSuggestions.utils.datatypes import Claim, Entity
 
 
 def read_csv(input_file, delimiter=","):

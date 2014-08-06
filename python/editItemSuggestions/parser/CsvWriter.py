@@ -1,6 +1,6 @@
 import csv
 
-from propertysuggester.utils.datatypes import Entity
+from editItemSuggestions.utils.datatypes import Entity
 
 
 def write_csv(entities, output_file, delimiter=","):
